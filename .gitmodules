@@ -1,0 +1,6 @@
+[submodule "third-party/moonlight"]
+	path = third-party/moonlight
+	url = https://github.com/moonlight-stream/moonlight-qt
+[submodule "third-party/curl"]
+	path = third-party/curl
+	url = https://github.com/curl/curl.git
