@@ -1,20 +1,8 @@
 rmdir /Q /S .\base-source
 mkdir .\base-source
-mkdir .\base-source\AntiHooking 
-mkdir .\base-source\app\streaming
-mkdir .\base-source\app\streaming\audio
-mkdir .\base-source\app\streaming\audio\renderers
-mkdir .\base-source\app\streaming\video
-mkdir .\base-source\app\streaming\video\ffmpeg-renderers
-mkdir .\base-source\app\streaming\video\ffmpeg-renderers\pacer
-mkdir .\base-source\app\streaming\input
-
-mkdir .\base-source\app\shaders
-mkdir .\base-source\app\backend
-mkdir .\base-source\app\cli
-
-mkdir .\base-source\app\settings 
-mkdir .\base-source\app\gui 
+mkdir .\base-source\app
+mkdir .\base-source\AntiHooking
+robocopy third-party\moonlight\app .\base-source\app /e /xf *
 
 FOR /R "third-party\moonlight\" %%x IN (AntiHooking\*.h) DO xcopy "%%x" "base-source/AntiHooking" /Y /I
 
