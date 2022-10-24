@@ -27,7 +27,7 @@ if /I "%ARCH%" NEQ "x86" (
 
 
 cd third-party/signaling
-call build-mingw.bat
+call build-msvc.bat
 cd ../..
 
 rmdir /Q /S .\app
@@ -154,7 +154,7 @@ echo Copying application binary to deployment directory
 copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
-
+rmdir /s /q %SOURCE_ROOT%\app
 exit /b !ERRORLEVEL!
 
 :Error
