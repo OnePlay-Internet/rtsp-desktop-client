@@ -26,14 +26,14 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 
-cd third-party/signaling
-call build-msvc.bat
-cd ../..
+@REM cd third-party/signaling
+@REM call build-msvc.bat
+@REM cd ../..
 
-rmdir /Q /S .\app
-mkdir app
-cd app
-cd ../
+@REM rmdir /Q /S .\app
+@REM mkdir app
+@REM cd app
+@REM cd ../
 
 xcopy "third-party/moonlight/app" "app" /E/H/C/I
 xcopy "custom" "app" /E/H/C/I/Y 
@@ -159,4 +159,5 @@ exit /b !ERRORLEVEL!
 
 :Error
 echo Build failed!
+rmdir /s /q %SOURCE_ROOT%\app
 exit /b !ERRORLEVEL!

@@ -29,7 +29,8 @@
         "xlocnum": "cpp",
         "xloctime": "cpp",
         "xmemory": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "qabstractlistmodel": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
