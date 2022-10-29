@@ -26,15 +26,11 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 
-@REM cd third-party/signaling
-@REM call build-msvc.bat
-@REM cd ../..
-
-@REM rmdir /Q /S .\app
-@REM mkdir app
-@REM cd app
-@REM cd ../
-
+rmdir /Q /S .\app
+mkdir app
+cd app
+cd ../
+xcopy "third-party/signaling/rtsp/header" "app" /E/H/C/I
 xcopy "third-party/moonlight/app" "app" /E/H/C/I
 xcopy "custom" "app" /E/H/C/I/Y 
 

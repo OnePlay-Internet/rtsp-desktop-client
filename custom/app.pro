@@ -39,6 +39,8 @@ win32 {
     }
     contains(QT_ARCH, x86_64) {
         LIBS += -L$$PWD/../third-party/moonlight/libs/windows/lib/x64
+        LIBS += -L$$PWD/../third-party/signaling/libs/release
+        LIBS += -L$$PWD/../third-party/libs/grpc
         INCLUDEPATH += $$PWD/../third-party/moonlight/libs/windows/include/x64
     }
     contains(QT_ARCH, arm64) {
@@ -47,7 +49,44 @@ win32 {
     }
 
     INCLUDEPATH += $$PWD/../third-party/moonlight/libs/windows/include
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
+    LIBS += ws2_32.lib \
+            winmm.lib \
+            dxva2.lib \
+            ole32.lib \
+            gdi32.lib \
+            user32.lib \
+            d3d9.lib \
+            dwmapi.lib \
+            dbghelp.lib \
+            signaling_rtsp.lib \
+            address_sorting.lib \
+            gpr.lib \
+            grpc++.lib  \
+            grpc_plugin_support.lib \
+            grpc_unsecure.lib \
+            grpc.lib \
+            grpc++_alts.lib \
+            grpcpp_channelz.lib \
+            grpc++_unsecure.lib \
+            grpc++_error_details.lib \
+            grpc++_reflection.lib \
+            libprotobuf.lib \
+            re2.lib \
+            libssl.lib \
+            libcrypto.lib \
+            abseil_dll.lib \
+            upb_json.lib \
+            upb_utf8_range.lib \
+            upb_reflection.lib \
+            cares.lib \
+            upb_mini_table.lib \
+            upb_extension_registry.lib \
+            upb_fastdecode.lib \
+            upb_collections.lib \
+            upb_textformat.lib \
+            descriptor_upb_proto.lib \
+            zlib.lib \
+            upb.lib
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
@@ -117,7 +156,7 @@ win32 {
     CONFIG += ffmpeg
 }
 win32:!winrt {
-    CONFIG += soundio discord-rpc
+    CONFIG += soundio discord-rpc 
 }
 macx {
     LIBS += -lssl -lcrypto -lavcodec.59 -lavutil.57 -lopus -framework SDL2 -framework SDL2_ttf
@@ -339,6 +378,7 @@ discord-rpc {
     LIBS += -ldiscord-rpc
     DEFINES += HAVE_DISCORD
 }
+
 embedded {
     message(Embedded build)
 

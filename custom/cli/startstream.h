@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QVariant>
+#include <Limelight.h>
 
 class ComputerManager;
 class NvComputer;
@@ -20,26 +21,21 @@ class Launcher : public QObject
     Q_DECLARE_PRIVATE_D(m_DPtr, Launcher)
 
 public:
-    explicit Launcher(QString token, 
+    explicit Launcher(QString token,
                       StreamingPreferences* preferences,
                       QObject *parent = nullptr);
     ~Launcher();
-    Q_INVOKABLE void execute(ComputerManager *manager);
-    Q_INVOKABLE void quitRunningApp();
+    Q_INVOKABLE void execute();
     Q_INVOKABLE bool isExecuted() const;
 
 signals:
-    void searchingComputer();
-    void searchingApp();
     void sessionCreated(QString appName, Session *session);
     void failed(QString text);
-    void appQuitRequired(QString appName);
 
 private slots:
-    void onComputerFound(NvComputer *computer);
-    void onComputerUpdated(NvComputer *computer);
-    void onTimeout();
-    void onQuitAppCompleted(QVariant error);
+    void onTimeout  ();
+
+
 
 private:
     QScopedPointer<LauncherPrivate> m_DPtr;

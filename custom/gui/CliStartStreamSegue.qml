@@ -41,11 +41,9 @@ Item {
             // load PcView when streaming from the command-line.
             SdlGamepadKeyNavigation.enable()
 
-            launcher.searchingComputer.connect(onSearchingComputer)
-            launcher.searchingApp.connect(onSearchingApp)
             launcher.sessionCreated.connect(onSessionCreated)
             launcher.failed.connect(onLaunchFailed)
-            launcher.appQuitRequired.connect(onAppQuitRequired)
+            launcher.execute()
         }
     }
 
@@ -86,7 +84,6 @@ Item {
             var params = {"appName": appName}
             stackView.push(component.createObject(stackView, params))
             // Trigger the quit after pushing the quit segue on screen
-            launcher.quitRunningApp()
         }
 
         onAccepted: quitApp()

@@ -2,7 +2,9 @@
 #include "backend/computermanager.h"
 #include "backend/computerseeker.h"
 #include "streaming/session.h"
+#include "signaling_rtsp.h"
 
+#include <QtEndian>
 #include <QCoreApplication>
 #include <QTimer>
 
@@ -14,8 +16,6 @@ namespace CliStartStream
 
 enum State {
     StateInit,
-    StateSeekComputer,
-    StateSeekApp,
     StateStartSession,
     StateFailure,
 };
@@ -24,19 +24,13 @@ class Event
 {
 public:
     enum Type {
-        AppQuitCompleted,
-        AppQuitRequested,
-        ComputerFound,
-        ComputerUpdated,
         Executed,
         Timedout,
     };
 
-    Event(Type type)
-        : type(type), computerManager(nullptr), computer(nullptr) {}
+    Event(Type type) : type(type)  {}
 
     Type type;
-    QString errorMessage;
 };
 
 class LauncherPrivate
@@ -49,120 +43,28 @@ public:
     void handleEvent(Event event)
     {
         Q_Q(Launcher);
-        Session* session;
-        NvApp app;
 
         switch (event.type) {
         // Occurs when CliStartStreamSegue becomes visible and the UI calls launcher's execute()
         case Event::Executed:
-            if (m_State == StateInit) {
-                m_State = StateSeekComputer;
-                emit q->searchingComputer();
-            }
-            break;
-        // Occurs when searched computer is found
-        case Event::ComputerFound:
-            if (m_State == StateSeekComputer) {
-                if (event.computer->pairState == NvComputer::PS_PAIRED) {
-                    m_State = StateSeekApp;
-                    m_Computer = event.computer;
-                    m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
-                    emit q->searchingApp();
-                } else {
-                    m_State = StateFailure;
-                    QString msg = QObject::tr("Computer %1 has not been paired. "
-                                              "Please open Moonlight to pair before streaming.")
-                            .arg(event.computer->name);
-                    emit q->failed(msg);
-                }
-            }
-            break;
-        // Occurs when a computer is updated
-        case Event::ComputerUpdated:
-            if (m_State == StateSeekApp) {
-                int index = getAppIndex();
-                if (-1 != index) {
-                    app = m_Computer->appList[index];
-                    m_TimeoutTimer->stop();
-                    if (isNotStreaming() || isStreamingApp(app)) {
-                        m_State = StateStartSession;
-                        session = new Session(m_Computer, app, m_Preferences);
-                        emit q->sessionCreated(app.name, session);
-                    } else {
-                        emit q->appQuitRequired(getCurrentAppName());
-                    }
-                }
-            }
-            break;
-        // Occurs when there was another app running on computer and user accepted quit
-        // confirmation dialog
-        case Event::AppQuitRequested:
-            if (m_State == StateSeekApp) {
-                m_ComputerManager->quitRunningApp(m_Computer);
-            }
-            break;
-        // Occurs when the previous app quit has been completed, handles quitting errors if any
-        // happended. ComputerUpdated event's handler handles session start when previous app has
-        // quit.
-        case Event::AppQuitCompleted:
-            if (m_State == StateSeekApp && !event.errorMessage.isEmpty()) {
-                m_State = StateFailure;
-                emit q->failed(QObject::tr("Quitting app failed, reason: %1").arg(event.errorMessage));
-            }
-            break;
-        // Occurs when computer or app search timed out
-        case Event::Timedout:
-            if (m_State == StateSeekComputer) {
-                m_State = StateFailure;
-                emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
-            }
-            if (m_State == StateSeekApp) {
-                m_State = StateFailure;
-                emit q->failed(QObject::tr("Failed to find application %1").arg(m_AppName));
-            }
+            m_State = StateStartSession;
+            Session* session = new Session(m_Token, m_Preferences);
+            emit q->sessionCreated("appname", session);
             break;
         }
-    }
-
-    int getAppIndex() const
-    {
-        for (int i = 0; i < m_Computer->appList.length(); i++) {
-            if (m_Computer->appList[i].name.toLower() == m_AppName.toLower()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    bool isNotStreaming() const
-    {
-        return m_Computer->currentGameId == 0;
-    }
-
-    bool isStreamingApp(NvApp app) const
-    {
-        return m_Computer->currentGameId == app.id;
-    }
-
-    QString getCurrentAppName() const
-    {
-        for (NvApp app : m_Computer->appList) {
-            if (m_Computer->currentGameId == app.id) {
-                return app.name;
-            }
-        }
-        return "<UNKNOWN>";
     }
 
     Launcher *q_ptr;
     QString m_Token;
 
+    SignalingClient* m_signaling;
     StreamingPreferences *m_Preferences;
     NvComputer *m_Computer;
 
     State m_State;
     QTimer *m_TimeoutTimer;
 };
+
 
 Launcher::Launcher(QString token, 
                    StreamingPreferences* preferences, 
@@ -185,18 +87,10 @@ Launcher::~Launcher()
 {
 }
 
-void Launcher::execute(ComputerManager *manager)
+void Launcher::execute()
 {
     Q_D(Launcher);
     Event event(Event::Executed);
-    event.computerManager = manager;
-    d->handleEvent(event);
-}
-
-void Launcher::quitRunningApp()
-{
-    Q_D(Launcher);
-    Event event(Event::AppQuitRequested);
     d->handleEvent(event);
 }
 
@@ -206,35 +100,10 @@ bool Launcher::isExecuted() const
     return d->m_State != StateInit;
 }
 
-void Launcher::onComputerFound(NvComputer *computer)
-{
-    Q_D(Launcher);
-    Event event(Event::ComputerFound);
-    event.computer = computer;
-    d->handleEvent(event);
-}
-
-void Launcher::onComputerUpdated(NvComputer *computer)
-{
-    Q_D(Launcher);
-    Event event(Event::ComputerUpdated);
-    event.computer = computer;
-    d->handleEvent(event);
-}
-
 void Launcher::onTimeout()
 {
     Q_D(Launcher);
     Event event(Event::Timedout);
     d->handleEvent(event);
 }
-
-void Launcher::onQuitAppCompleted(QVariant error)
-{
-    Q_D(Launcher);
-    Event event(Event::AppQuitCompleted);
-    event.errorMessage = error.toString();
-    d->handleEvent(event);
-}
-
 }

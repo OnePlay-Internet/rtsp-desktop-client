@@ -421,9 +421,10 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     if (posArgs.length() < 2) {
         parser.showError("Host not provided");
     }
-    std::string url = parser.positionalArguments().at(1);
+
+    QString url = parser.positionalArguments().at(1);
     std::vector<std::string> v = split(url.toStdString(), "?");
-    m_Token = QString(v[1]);
+    m_Token = QString().fromStdString(v[1]);
 }
 
 
