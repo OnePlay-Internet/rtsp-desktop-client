@@ -445,7 +445,6 @@ handle_server_infor(ServerInfor* infor, void* data)
 {
     Session* session = (Session*)data;
     session->m_Computer = new NvComputer(infor);
-    session->m_App = session->m_Computer->appList[0];
     session->m_ComputerReady = true;
 
     while(!session->m_StreamConfigReady) {std::this_thread::sleep_for(1s);}
@@ -699,12 +698,8 @@ void Session::emitLaunchWarning(QString text)
 bool Session::validateLaunch(SDL_Window* testWindow)
 {
     if (!m_Computer->isSupportedServerVersion) {
-        emit displayLaunchError(tr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(m_Computer->name));
+        emit displayLaunchError(tr("The version of server not supported please update your client"));
         return false;
-    }
-
-    if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
-        emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
@@ -1165,75 +1160,41 @@ bool Session::startConnectionAsync()
     // have time to read any messages present on the segue
     SDL_Delay(1500);
 
-    // The UI should have ensured the old game was already quit
-    // if we decide to stream a different game.
-    Q_ASSERT(m_Computer->currentGameId == 0 ||
-             m_Computer->currentGameId == m_App.id);
+    // MODIFY: remove assertion cus we are  streaming desktop
+    // // The UI should have ensured the old game was already quit
+    // // if we decide to stream a different game.
+    // Q_ASSERT(m_Computer->currentGameId == 0 ||
+    //          m_Computer->currentGameId == m_App.id);
 
     // SOPS will set all settings to 720p60 if it doesn't recognize
     // the chosen resolution. Avoid that by disabling SOPS when it
     // is not streaming a supported resolution.
     bool enableGameOptimizations = false;
-    for (const NvDisplayMode &mode : m_Computer->displayModes) {
-        if (mode.width == m_StreamConfig.width &&
-                mode.height == m_StreamConfig.height) {
+
+    int i = 0;
+    while ((*(m_Computer->displayModes + i))->active) {
+        NvDisplayMode* mode = *(m_Computer->displayModes + i);
+        if (mode->width  == m_StreamConfig.width &&
+            mode->height == m_StreamConfig.height) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Found host supported resolution: %dx%d",
-                        mode.width, mode.height);
+                        mode->width, mode->height);
             enableGameOptimizations = m_Preferences->gameOptimizations;
             break;
         }
+        i++;
     }
 
-    QString rtspSessionUrl;
-
-    
-
-    try {
-
-
-
-        // NvHTTP http(m_Computer);
-        // if (m_Computer->currentGameId != 0) {
-        //     http.resumeApp(&m_StreamConfig, rtspSessionUrl);
-        // }
-        // else {
-        //     http.launchApp(m_App.id, &m_StreamConfig,
-        //                    enableGameOptimizations,
-        //                    m_Preferences->playAudioOnHost,
-        //                    m_InputHandler->getAttachedGamepadMask(),
-        //                    rtspSessionUrl);
-        // }
-    } catch (const GfeHttpResponseException& e) {
-        emit displayLaunchError(tr("GeForce Experience returned error: %1").arg(e.toQString()));
-        return false;
-    } catch (const QtNetworkReplyException& e) {
-        emit displayLaunchError(e.toQString());
-        return false;
-    }
-
-    QByteArray hostnameStr = m_Computer->activeAddress.address().toLatin1();
-    QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
+    while (!m_ComputerReady) { std::this_thread::sleep_for(100ms); }
 
     SERVER_INFORMATION hostInfo;
-    hostInfo.address = hostnameStr.data();
-    hostInfo.serverInfoAppVersion = siAppVersion.data();
+    hostInfo.address =              m_Computer->activeAddress;
+    hostInfo.serverInfoAppVersion = m_Computer->appVersion.toLatin1().data();
+    hostInfo.serverInfoGfeVersion = m_Computer->gfeVersion.toLatin1().data();
 
-    // Older GFE versions didn't have this field
-    QByteArray siGfeVersion;
-    if (!m_Computer->gfeVersion.isEmpty()) {
-        siGfeVersion = m_Computer->gfeVersion.toLatin1();
-    }
-    if (!siGfeVersion.isEmpty()) {
-        hostInfo.serverInfoGfeVersion = siGfeVersion.data();
-    }
+    while (!m_RTSPReady) { std::this_thread::sleep_for(100ms); }
+    hostInfo.rtspSessionUrl =       m_RTSPurl.toLatin1().data();
 
-    // Older GFE and Sunshine versions didn't have this field
-    QByteArray rtspSessionUrlStr;
-    if (!rtspSessionUrl.isEmpty()) {
-        rtspSessionUrlStr = rtspSessionUrl.toLatin1();
-        hostInfo.rtspSessionUrl = rtspSessionUrlStr.data();
-    }
 
     if (m_Preferences->packetSize != 0) {
         // Override default packet size and remote streaming detection
@@ -1243,8 +1204,7 @@ bool Session::startConnectionAsync()
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Using custom packet size: %d bytes",
                     m_Preferences->packetSize);
-    }
-    else {
+    } else {
         // isReachableOverVpn() does network I/O, so we only attempt to check
         // VPN reachability if we've already contacted the PC successfully
         if (m_Computer->isReachableOverVpn()) {
@@ -1259,7 +1219,9 @@ bool Session::startConnectionAsync()
         }
     }
 
-    int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
+    int err = LiStartConnection(&hostInfo, 
+                                &m_StreamConfig, 
+                                &k_ConnCallbacks,
                                 &m_VideoCallbacks,
                                 m_AudioDisabled ? nullptr : &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -1367,7 +1329,7 @@ void Session::execInternal()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_Computer,
+    m_InputHandler = new SdlInputHandler(*m_Preferences, NULL, // MODIFY: NULL since m_computer is unused
                                          m_StreamConfig.width,
                                          m_StreamConfig.height);
 
@@ -1525,7 +1487,8 @@ void Session::execInternal()
     m_UnexpectedTermination = false;
 
     // Start rich presence to indicate we're in game
-    RichPresenceManager presence(*m_Preferences, m_App.name);
+    // RichPresenceManager presence(*m_Preferences, m_App.name);
+    RichPresenceManager presence(*m_Preferences, "Oneplay");
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.

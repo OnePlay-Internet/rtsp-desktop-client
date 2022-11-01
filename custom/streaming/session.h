@@ -54,7 +54,6 @@ public:
 
     bool m_ComputerReady;
     NvComputer* m_Computer;
-    NvApp m_App;
 
     bool m_RTSPReady;
     QString m_RTSPurl;
