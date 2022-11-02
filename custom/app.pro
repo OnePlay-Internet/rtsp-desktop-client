@@ -39,9 +39,62 @@ win32 {
     }
     contains(QT_ARCH, x86_64) {
         LIBS += -L$$PWD/../third-party/moonlight/libs/windows/lib/x64
-        LIBS += -L$$PWD/../third-party/signaling/libs/release
-        LIBS += -L$$PWD/../third-party/libs/grpc
         INCLUDEPATH += $$PWD/../third-party/moonlight/libs/windows/include/x64
+        
+        CONFIG(debug, debug|release) {
+            LIBS += -L$$PWD/../third-party/signaling/build/rtsp/Debug
+            LIBS += -L/vcpkg/installed\x64-windows/debug/lib
+            LIBS += zlibd.lib \
+                    libprotobufd.lib \            
+                    /vcpkg/installed/x64-windows/debug/lib/grpc++_reflection.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/grpc++.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/grpc.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/cares.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/address_sorting.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/re2.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/absl_statusor.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/gpr.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_json.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_textformat.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_reflection.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_collections.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_mini_table.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_fastdecode.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_utf8_range.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/upb_extension_registry.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/descriptor_upb_proto.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/abseil_dll.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/libssl.lib \
+                    /vcpkg/installed/x64-windows/debug/lib/libcrypto.lib \
+        }
+        CONFIG(release, debug|release) {
+            LIBS += -L$$PWD/../third-party/signaling/build/rtsp/Release
+            LIBS += -L/vcpkg/installed\x64-windows/lib
+            LIBS += zlib.lib \
+                    libprotobuf.lib \
+                    /vcpkg/installed/x64-windows/lib/grpc++_reflection.lib \
+                    /vcpkg/installed/x64-windows/lib/grpc++.lib \
+                    /vcpkg/installed/x64-windows/lib/grpc.lib \
+                    /vcpkg/installed/x64-windows/lib/cares.lib \
+                    /vcpkg/installed/x64-windows/lib/address_sorting.lib \
+                    /vcpkg/installed/x64-windows/lib/re2.lib \
+                    /vcpkg/installed/x64-windows/lib/absl_statusor.lib \
+                    /vcpkg/installed/x64-windows/lib/gpr.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_json.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_textformat.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_reflection.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_collections.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_mini_table.lib \
+                    /vcpkg/installed/x64-windows/lib/upb.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_fastdecode.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_utf8_range.lib \
+                    /vcpkg/installed/x64-windows/lib/upb_extension_registry.lib \
+                    /vcpkg/installed/x64-windows/lib/descriptor_upb_proto.lib \
+                    /vcpkg/installed/x64-windows/lib/abseil_dll.lib \
+                    /vcpkg/installed/x64-windows/lib/libssl.lib \
+                    /vcpkg/installed/x64-windows/lib/libcrypto.lib \
+        }
     }
     contains(QT_ARCH, arm64) {
         LIBS += -L$$PWD/../third-party/moonlight/libs/windows/lib/arm64
@@ -52,41 +105,24 @@ win32 {
     LIBS += ws2_32.lib \
             winmm.lib \
             dxva2.lib \
-            ole32.lib \
             gdi32.lib \
-            user32.lib \
             d3d9.lib \
             dwmapi.lib \
             dbghelp.lib \
-            signaling_rtsp.lib \
-            address_sorting.lib \
-            gpr.lib \
-            grpc++.lib  \
-            grpc_plugin_support.lib \
-            grpc_unsecure.lib \
-            grpc.lib \
-            grpc++_alts.lib \
-            grpcpp_channelz.lib \
-            grpc++_unsecure.lib \
-            grpc++_error_details.lib \
-            grpc++_reflection.lib \
-            libprotobuf.lib \
-            re2.lib \
-            libssl.lib \
-            libcrypto.lib \
-            abseil_dll.lib \
-            upb_json.lib \
-            upb_utf8_range.lib \
-            upb_reflection.lib \
-            cares.lib \
-            upb_mini_table.lib \
-            upb_extension_registry.lib \
-            upb_fastdecode.lib \
-            upb_collections.lib \
-            upb_textformat.lib \
-            descriptor_upb_proto.lib \
-            zlib.lib \
-            upb.lib
+            iphlpapi.lib \ 
+            wsock32.lib \
+            crypt32.lib \
+            kernel32.lib \
+            user32.lib \
+            winspool.lib \
+            shell32.lib \
+            ole32.lib \
+            oleaut32.lib \
+            comdlg32.lib \
+            advapi32.lib \
+            uuid.lib \
+            signaling_rtsp.lib \ 
+
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
@@ -152,7 +188,7 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
+    LIBS += -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
     CONFIG += ffmpeg
 }
 win32:!winrt {
@@ -489,7 +525,7 @@ win32 {
     QMAKE_TARGET_PRODUCT = Moonlight
 
     CONFIG -= embed_manifest_exe
-    QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
+    QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest 
 }
 macx {
     # Create Info.plist in object dir with the correct version string

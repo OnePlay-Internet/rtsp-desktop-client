@@ -530,7 +530,6 @@ bool Session::initialize()
         }
     }
 
-    qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
@@ -1176,9 +1175,6 @@ bool Session::startConnectionAsync()
         NvDisplayMode* mode = *(m_Computer->displayModes + i);
         if (mode->width  == m_StreamConfig.width &&
             mode->height == m_StreamConfig.height) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Found host supported resolution: %dx%d",
-                        mode->width, mode->height);
             enableGameOptimizations = m_Preferences->gameOptimizations;
             break;
         }

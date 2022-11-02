@@ -44,7 +44,6 @@ public:
 
     QString gfeVersion;
     QString appVersion;
-    QString gpuModel;
     bool isSupportedServerVersion;
 
     NvDisplayMode* displayModes[5];

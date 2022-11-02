@@ -27,7 +27,6 @@ NvComputer::NvComputer(ServerInfor* serverInfor)
 {
     this->appVersion = QString(serverInfor->appVersion);
     this->gfeVersion = QString(serverInfor->gfeVersion);
-    this->gpuModel   = QString(serverInfor->gpuModel);
 
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
 

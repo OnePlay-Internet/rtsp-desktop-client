@@ -26,6 +26,16 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 
+rem Convert to lower case for windeployqt
+cd third-party/signaling
+if /I "%BUILD_CONFIG%"=="debug" (
+    call build-msvc.bat Debug
+) else if /I "%BUILD_CONFIG%"=="release" (
+    call build-msvc.bat Release
+)
+cd ../..
+
+
 rmdir /Q /S .\app
 mkdir app
 cd app
@@ -114,7 +124,14 @@ if "%ML_SYMBOL_STORE%" NEQ "" (
 
 echo Copying DLL dependencies
 copy %SOURCE_ROOT%\third-party\moonlight\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
+copy \vcpkg\installed\x64-windows\tools\protobuf\*.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
+
+if /I "%BUILD_CONFIG%"=="debug" (
+    copy \vcpkg\installed\x64-windows\debug\bin\*.dll %DEPLOY_FOLDER%
+) else if /I "%BUILD_CONFIG%"=="release" (
+    copy \vcpkg\installed\x64-windows\bin\*.dll %DEPLOY_FOLDER%
+)
 
 echo Copying AntiHooking.dll
 copy %BUILD_FOLDER%\third-party\moonlight\AntiHooking\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
@@ -150,7 +167,7 @@ echo Copying application binary to deployment directory
 copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
-rmdir /s /q %SOURCE_ROOT%\app
+@REM rmdir /s /q %SOURCE_ROOT%\app
 exit /b !ERRORLEVEL!
 
 :Error
