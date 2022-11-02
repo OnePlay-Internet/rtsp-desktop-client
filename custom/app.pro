@@ -192,7 +192,7 @@ win32 {
     CONFIG += ffmpeg
 }
 win32:!winrt {
-    CONFIG += soundio discord-rpc 
+    CONFIG += soundio 
 }
 macx {
     LIBS += -lssl -lcrypto -lavcodec.59 -lavutil.57 -lopus -framework SDL2 -framework SDL2_ttf
@@ -201,7 +201,7 @@ macx {
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit
 
-    CONFIG += ffmpeg soundio discord-rpc
+    CONFIG += ffmpeg soundio 
 }
 
 SOURCES += \
@@ -407,12 +407,6 @@ soundio {
     DEFINES += HAVE_SOUNDIO SOUNDIO_STATIC_LIBRARY
     SOURCES += streaming/audio/renderers/soundioaudiorenderer.cpp
     HEADERS += streaming/audio/renderers/soundioaudiorenderer.h
-}
-discord-rpc {
-    message(Discord integration enabled)
-
-    LIBS += -ldiscord-rpc
-    DEFINES += HAVE_DISCORD
 }
 
 embedded {
