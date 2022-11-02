@@ -30,8 +30,10 @@ rem Convert to lower case for windeployqt
 cd third-party/signaling
 if /I "%BUILD_CONFIG%"=="debug" (
     call build-msvc.bat Debug
+    set BUILD_CONFIG=debug
 ) else if /I "%BUILD_CONFIG%"=="release" (
     call build-msvc.bat Release
+    set BUILD_CONFIG=release
 )
 cd ../..
 
