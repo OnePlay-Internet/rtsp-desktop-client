@@ -41,7 +41,6 @@
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
-#include "gui/sdlgamepadkeynavigation.h"
 
 
 
@@ -551,29 +550,6 @@ int main(int argc, char *argv[])
     qputenv("SDL_VIDEO_WAYLAND_WMCLASS", "com.moonlight_stream.Moonlight");
     qputenv("SDL_VIDEO_X11_WMCLASS", "com.moonlight_stream.Moonlight");
 
-    // Register our C++ types for QML
-    qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
-    qmlRegisterSingletonType<AutoUpdateChecker>("AutoUpdateChecker", 1, 0,
-                                                "AutoUpdateChecker",
-                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                    return new AutoUpdateChecker();
-                                                });
-    qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
-                                               "SystemProperties",
-                                               [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                   return new SystemProperties();
-                                               });
-    qmlRegisterSingletonType<SdlGamepadKeyNavigation>("SdlGamepadKeyNavigation", 1, 0,
-                                                      "SdlGamepadKeyNavigation",
-                                                      [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                          return new SdlGamepadKeyNavigation();
-                                                      });
-    qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
-                                                   "StreamingPreferences",
-                                                   [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
-                                                       return new StreamingPreferences(qmlEngine);
-                                                   });
-
 #ifndef Q_OS_WINRT
     // Use the dense material dark theme by default
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
@@ -598,35 +574,22 @@ int main(int argc, char *argv[])
         qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
     }
 
-    QQmlApplicationEngine engine;
-    QString initialView;
-    bool hasGUI = true;
-
     GlobalCommandLineParser parser;
     switch (parser.parse(app.arguments())) {
     case GlobalCommandLineParser::StreamRequested:
         {
-            initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = new StreamingPreferences(&app);
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
             QString token = streamParser.getToken();
-            auto launcher   = new CliStartStream::Launcher(token, preferences, &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
+            Session* session = new Session(token, preferences);
+            session->exec(0,0);
             break;
         }
     case GlobalCommandLineParser::ErrorParsing:
         return 0;
     }
 
-    if (hasGUI) {
-        engine.rootContext()->setContextProperty("initialView", initialView);
-
-        // Load the main.qml file
-        engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
-        if (engine.rootObjects().isEmpty())
-            return -1;
-    }
 
     int err = app.exec();
 

@@ -501,6 +501,9 @@ Session::Session(QString token,
         NULL,
         NULL,
         this); 
+    m_ComputerReady = false;
+    m_StreamConfigReady = false;
+    m_RTSPReady = false;
 }
 
 bool Session::initialize()

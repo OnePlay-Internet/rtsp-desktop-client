@@ -179,16 +179,14 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts OnePlay normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
-        "  key <key>          Starts streaming an app using session key\n"
         "  oneplay:key?<key>  Starts streaming an app using session key\n"
         "\n"
         "See 'oneplay <action> --help' for help of specific action."
     );
     parser.addPositionalArgument("action", "Action to execute", "<action>");
     parser.parse(args);
+
     auto posArgs = parser.positionalArguments();
-
-
     if (posArgs.isEmpty()) {
         // This method will not return and terminates the process if --version
         // or --help is specified
@@ -417,12 +415,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.handleHelpAndVersionOptions();
 
     // Verify that both host and app has been provided
-    auto posArgs = parser.positionalArguments();
-    if (posArgs.length() < 2) {
-        parser.showError("Host not provided");
-    }
 
-    QString url = parser.positionalArguments().at(1);
+    QString url = parser.positionalArguments().at(0);
     std::vector<std::string> v = split(url.toStdString(), "?");
     m_Token = QString().fromStdString(v[1]);
 }
